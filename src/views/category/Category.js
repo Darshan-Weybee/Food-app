@@ -1,30 +1,55 @@
 import { CButton, CCard, CCardBody, CCardHeader, CSpinner, CTable, CTableBody, CTableDataCell, CTableHead, CTableHeaderCell, CTableRow } from "@coreui/react";
-import { collection, deleteDoc, doc, onSnapshot } from "firebase/firestore";
+import { collection, deleteDoc, doc, getCountFromServer, getDocs, limit, onSnapshot, orderBy, query } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { db } from "../../firebase";
+
+const dataLimit = 10;
 
 function Category() {
     const navigate = useNavigate();
     const [categoryList, setCategoryList] = useState([]);
     const [loader, setLoader] = useState(true);
+    const [totalDataCount, setTotalDataCount] = useState(0);
+    const [limitDisplayData, setLimitDisplayData] = useState(dataLimit);
 
     const addNewHandleClick = () => {
         navigate("/category/newcategory");
     }
 
     useEffect(() => {
-        const unsub = onSnapshot(collection(db, "category"), (snapshot) => {
-            const list = [];
-            snapshot.docs.forEach(doc => {
-                list.push({ docId: doc.id, ...doc.data() })
-            });
-            setCategoryList(list);
-            setLoader(false);
-        }, (error) => console.error(error.message));
-
-        return () => { unsub(); }
+        async function getCount() {
+            // try {
+            //     const coll = collection(db, "category");
+            //     const snapshot = await getCountFromServer(coll);
+            //     setTotalDataCount(snapshot.data().count);
+            //     setLoader(false);
+            // } catch (err) {
+            //     console.error(err.message);
+            // }
+        }
+        getCount();
     }, [])
+
+    useEffect(() => {
+        getData();
+    }, [limitDisplayData])
+
+    const loadMoreFun = () => {
+        setLimitDisplayData(prev => prev + dataLimit)
+    }
+
+    const getData = async () => {
+        // const next = query(collection(db, "category"), orderBy("categoryName"), limit(limitDisplayData));
+        // const documentSnapshots = await getDocs(next);
+        // const list = [];
+        // documentSnapshots.forEach((doc) => {
+        //     list.push({ docId: doc.id, ...doc.data() })
+        // });
+        // setCategoryList(list);
+        // setLoader(false);
+    };
+
 
     const deleteCategory = async (category) => {
         await deleteDoc(doc(db, "category", category.docId));
@@ -64,6 +89,7 @@ function Category() {
                             }
                         </CTableBody>
                     </CTable>
+                    <CButton size="sm" color="secondary" variant="outline" onClick={loadMoreFun} disabled={totalDataCount <= categoryList.length}>{totalDataCount <= categoryList.length ? "No More Data to fetch" : "Load More.."}</CButton>
                 </CCardBody>
             </CCard>}
         </>
@@ -71,3 +97,16 @@ function Category() {
 }
 
 export default Category
+
+// useEffect(() => {
+//     const unsub = onSnapshot(collection(db, "category"), (snapshot) => {
+//         const list = [];
+//         snapshot.docs.forEach(doc => {
+//             list.push({ docId: doc.id, ...doc.data() })
+//         });
+//         setCategoryList(list);
+//         setLoader(false);
+//     }, (error) => console.error(error.message));
+
+//     return () => { unsub(); }
+// }, [])

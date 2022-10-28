@@ -2,26 +2,51 @@ import React, { useEffect, useState } from "react";
 import { CCard, CCardBody, CCardHeader, CSpinner, CTable, CTableBody, CTableDataCell, CTableHead, CTableHeaderCell, CTableRow } from '@coreui/react'
 import { CButton } from '@coreui/react'
 import { useNavigate } from "react-router-dom";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, getCountFromServer, getDocs, limit, onSnapshot, orderBy, query } from "firebase/firestore";
 import { db } from "../../firebase"
+
+const dataLimit = 10;
 
 function Users() {
     const navigate = useNavigate();
     const [users, setUsers] = useState([]);
     const [loader, setLoader] = useState(true);
+    const [totalDataCount, setTotalDataCount] = useState(0);
+    const [limitDisplayData, setLimitDisplayData] = useState(dataLimit);
 
     useEffect(() => {
-        const unsub = onSnapshot(collection(db, "admin"), (snapshot) => {
-            const list = [];
-            snapshot.docs.forEach(doc => {
-                list.push({ id: doc.id, ...doc.data() })
-            });
-            setUsers(list);
-            setLoader(false);
-        }, (error) => console.error(error.message));
-
-        return () => { unsub(); }
+        async function getCount() {
+            // try {
+            //     const coll = collection(db, "admin");
+            //     const snapshot = await getCountFromServer(coll);
+            //     setTotalDataCount(snapshot.data().count);
+            //     setLoader(false);
+            // } catch (err) {
+            //     console.error(err.message);
+            // }
+        }
+        getCount();
     }, [])
+
+    useEffect(() => {
+        getData();
+    }, [limitDisplayData])
+
+    const loadMoreFun = () => {
+        setLimitDisplayData(prev => prev + dataLimit)
+    }
+
+    const getData = async () => {
+        // const next = query(collection(db, "admin"), orderBy("username"), limit(limitDisplayData));
+        // const documentSnapshots = await getDocs(next);
+        // const list = [];
+        // documentSnapshots.forEach((doc) => {
+        //     list.push({ docId: doc.id, ...doc.data() })
+        // });
+        // setUsers(list);
+        // setLoader(false);
+    };
+
 
     const items = users.map(user => {
         return {
@@ -67,7 +92,7 @@ function Users() {
                         </CTableHead>
                         <CTableBody>
                             {
-                                items.map(item => <CTableRow key={item.id}>
+                                items.map((item,index) => <CTableRow key={index}>
                                     <CTableHeaderCell scope="row">{item.id}</CTableHeaderCell>
                                     <CTableDataCell>{item.username}</CTableDataCell>
                                     <CTableDataCell>{item.email}</CTableDataCell>
@@ -77,6 +102,7 @@ function Users() {
                             }
                         </CTableBody>
                     </CTable>
+                    <CButton size="sm" color="secondary" variant="outline" onClick={loadMoreFun} disabled={totalDataCount <= users.length}>{totalDataCount <= users.length ? "No More Data to fetch" : "Load More.."}</CButton>
                 </CCardBody>
             </CCard>
 
@@ -86,3 +112,16 @@ function Users() {
 }
 
 export default Users
+
+// useEffect(() => {
+//     const unsub = onSnapshot(collection(db, "admin"), (snapshot) => {
+//         const list = [];
+//         snapshot.docs.forEach(doc => {
+//             list.push({ id: doc.id, ...doc.data() })
+//         });
+//         setUsers(list);
+//         setLoader(false);
+//     }, (error) => console.error(error.message));
+
+//     return () => { unsub(); }
+// }, [])

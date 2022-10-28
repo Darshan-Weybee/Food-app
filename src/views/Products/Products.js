@@ -1,33 +1,46 @@
 import { CButton, CCard, CCardBody, CCardHeader, CSpinner, CTable, CTableBody, CTableDataCell, CTableHead, CTableHeaderCell, CTableRow } from "@coreui/react";
-import { collection, getDocs, limit, orderBy, query, startAfter } from "firebase/firestore";
+import { collection, getCountFromServer, getDocs, limit, orderBy, query } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { db } from "../../firebase"
 
+const dataLimit = 10;
+
 function Products() {
+    const [totalDataCount, setTotalDataCount] = useState(0);
     const [productList, setProductList] = useState([]);
     const [loader, setLoader] = useState(true);
     const navigate = useNavigate();
+    const [limitDisplayData, setLimitDisplayData] = useState(dataLimit);
 
     useEffect(() => {
-
-        const getData = async () => {
-            const next = query(collection(db, "products"), orderBy("id"), startAfter(""), limit(5));
-            const documentSnapshots = await getDocs(next);
-            console.log(documentSnapshots);
+        async function getCount() {
+            // try {
+            //     const coll = collection(db, "products");
+            //     const snapshot = await getCountFromServer(coll);
+            //     setTotalDataCount(snapshot.data().count);
+            //     setLoader(false);
+            // } catch (err) {
+            //     console.error(err.message);
+            // }
         }
-        getData();
-        // const unsub = onSnapshot(collection(db, "products"), (snapshot) => {
-        //     const list = [];
-        //     snapshot.docs.forEach(doc => {
-        //         list.push({ docId : doc.id, ...doc.data() })
-        //     });
-        //     setProductList(list);
-        //     setLoader(false);
-        // }, (error) => console.error(error.message));
-
-        // return () => { unsub(); }
+        getCount();
     }, [])
+
+    useEffect(() => {
+        getData();
+    }, [limitDisplayData])
+
+    const getData = async () => {
+        // const next = query(collection(db, "products"), orderBy("name"), limit(limitDisplayData));
+        // const documentSnapshots = await getDocs(next);
+        // const list = [];
+        // documentSnapshots.forEach((doc) => {
+        //     list.push({ docId: doc.id, ...doc.data() })
+        // });
+        // setProductList(list);
+        // setLoader(false);
+    };
 
     const addNewProducts = () => {
         navigate("/products/newproduct");
@@ -35,6 +48,10 @@ function Products() {
 
     const editProduct = product => {
         navigate("/products/editproduct", { state: product });
+    }
+
+    const loadMoreFun = () => {
+        setLimitDisplayData(prev => prev + dataLimit)
     }
 
     return (
@@ -75,10 +92,26 @@ function Products() {
                                 }
                             </CTableBody>
                         </CTable>
+                        <CButton size="sm" color="secondary" variant="outline" onClick={loadMoreFun} disabled={totalDataCount <= productList.length+1}>{totalDataCount <= productList.length+1 ? "No More Data to fetch" : "Load More.."}</CButton>
                     </CCardBody>
-                </CCard>}
+                </CCard>
+            }
         </>
     )
 }
 
-export default Products 
+export default Products
+
+
+        //     const list = [];
+        //     snapshot.docs.forEach(doc => {
+        //         list.push({ docId : doc.id, ...doc.data() })
+        //     });
+        //     setTotalData(list);
+        //     setLoader(false);
+        // }, (error) => console.error(error.message));
+
+        // return () => { unsub(); }
+
+
+
